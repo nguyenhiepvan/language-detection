@@ -1,5 +1,5 @@
 {
-  "name": "hocvt/language-detection",
+  "name": "nguyenhiep/language-detection",
   "type": "library",
   "description": "A language detection library for PHP. Detects the language from a given text string.",
   "keywords": ["language", "detection", "detect"],
