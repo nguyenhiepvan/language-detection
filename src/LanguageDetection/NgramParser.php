@@ -1,11 +1,12 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageDetection;
 
 use LanguageDetection\Tokenizer\TokenizerInterface;
 use LanguageDetection\Tokenizer\WhitespaceTokenizer;
+use LengthException;
 
 /**
  * Class NgramParser
@@ -20,32 +21,31 @@ abstract class NgramParser
     /**
      * @var int
      */
-    protected $minLength = 1;
+    protected int $minLength = 1;
 
     /**
      * @var int
      */
-    protected $maxLength = 3;
+    protected int $maxLength = 3;
 
     /**
      * @var int
      */
-    protected $maxNgrams = 9000;
+    protected int $maxNgrams = 9000;
 
     /**
-     * @var TokenizerInterface
+     * @var ?TokenizerInterface
      */
-    protected $tokenizer = null;
+    protected ?TokenizerInterface $tokenizer = null;
 
     /**
      * @param int $minLength
-     * @throws \LengthException
+     * @throws LengthException
      */
-    public function setMinLength(int $minLength)
+    public function setMinLength(int $minLength): void
     {
-        if ($minLength <= 0 || $minLength >= $this->maxLength)
-        {
-            throw new \LengthException('$minLength must be greater than zero and less than $this->maxLength.');
+        if ($minLength <= 0 || $minLength >= $this->maxLength) {
+            throw new LengthException('$minLength must be greater than zero and less than $this->maxLength.');
         }
 
         $this->minLength = $minLength;
@@ -53,13 +53,12 @@ abstract class NgramParser
 
     /**
      * @param int $maxLength
-     * @throws \LengthException
+     * @throws LengthException
      */
-    public function setMaxLength(int $maxLength)
+    public function setMaxLength(int $maxLength): void
     {
-        if ($maxLength <= $this->minLength)
-        {
-            throw new \LengthException('$maxLength must be greater than $this->minLength.');
+        if ($maxLength <= $this->minLength) {
+            throw new LengthException('$maxLength must be greater than $this->minLength.');
         }
 
         $this->maxLength = $maxLength;
@@ -67,13 +66,12 @@ abstract class NgramParser
 
     /**
      * @param int $maxNgrams
-     * @throws \LengthException
+     * @throws LengthException
      */
-    public function setMaxNgrams(int $maxNgrams)
+    public function setMaxNgrams(int $maxNgrams): void
     {
-        if ($maxNgrams <= 0)
-        {
-            throw new \LengthException('$maxNgrams must be greater than zero.');
+        if ($maxNgrams <= 0) {
+            throw new LengthException('$maxNgrams must be greater than zero.');
         }
 
         $this->maxNgrams = $maxNgrams;
@@ -84,7 +82,7 @@ abstract class NgramParser
      *
      * @param TokenizerInterface $tokenizer
      */
-    public function setTokenizer(TokenizerInterface $tokenizer)
+    public function setTokenizer(TokenizerInterface $tokenizer): void
     {
         $this->tokenizer = $tokenizer;
     }
@@ -93,10 +91,9 @@ abstract class NgramParser
      * @param string $str
      * @return array
      */
-    private function tokenize(string $str)
+    private function tokenize(string $str): array
     {
-        if (null === $this->tokenizer)
-        {
+        if (null === $this->tokenizer) {
             $this->tokenizer = new WhitespaceTokenizer();
         }
 
@@ -111,31 +108,25 @@ abstract class NgramParser
     {
         $tokens = [];
 
-        foreach ($this->tokenize($str) as $word)
-        {
+        foreach ($this->tokenize($str) as $word) {
             $l = mb_strlen($word);
 
-            for ($i = $this->minLength; $i <= $this->maxLength; ++$i)
-            {
-                for ($j = 0; ($i + $j - 1) < $l; ++$j, ++$tmp)
-                {
+            for ($i = $this->minLength; $i <= $this->maxLength; ++$i) {
+                for ($j = 0; ($i + $j - 1) < $l; ++$j, ++$tmp) {
                     $tmp = &$tokens[$i][mb_substr($word, $j, $i)];
                 }
             }
         }
 
-        foreach ($tokens as $i => $token)
-        {
+        foreach ($tokens as $i => $token) {
             $sum = array_sum($token);
 
-            foreach ($token as $j => $value)
-            {
+            foreach ($token as $j => $value) {
                 $tokens[$i][$j] = $value / $sum;
             }
         }
 
-        if (!count($tokens))
-        {
+        if (!count($tokens)) {
             return [];
         }
 

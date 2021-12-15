@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageDetection;
 
@@ -17,37 +17,31 @@ class Language extends NgramParser
     /**
      * @var array
      */
-    protected $tokens = [];
+    protected mixed $tokens = [];
 
     /**
      * Loads all language files
      *
      * @param array $lang List of ISO 639-1 codes, that should be used in the detection phase
      * @param string $dirname Name of the directory where the translations files are located
+     * @throws \JsonException
      */
     public function __construct(array $lang = [], string $dirname = '')
     {
-        if (empty($dirname))
-        {
+        if (empty($dirname)) {
             $dirname = __DIR__ . '/../../resources/*/*.json';
-        }
-        else if (!is_dir($dirname) || !is_readable($dirname))
-        {
+        } else if (!is_dir($dirname) || !is_readable($dirname)) {
             throw new \InvalidArgumentException('Provided directory could not be found or is not readable');
-        }
-        else
-        {
+        } else {
             $dirname = rtrim($dirname, '/');
             $dirname .= '/*/*.json';
         }
 
         $isEmpty = empty($lang);
 
-        foreach (glob($dirname) as $json)
-        {
-            if ($isEmpty || in_array(basename($json, '.json'), $lang))
-            {
-                $this->tokens += json_decode(file_get_contents($json), true);
+        foreach (glob($dirname) as $json) {
+            if ($isEmpty || in_array(basename($json, '.json'), $lang, true)) {
+                $this->tokens += json_decode(file_get_contents($json), true, 512, JSON_THROW_ON_ERROR);
             }
         }
     }
@@ -66,19 +60,15 @@ class Language extends NgramParser
 
         $result = [];
 
-        if (count($samples) > 0)
-        {
-            foreach ($this->tokens as $lang => $value)
-            {
+        if (count($samples) > 0) {
+            foreach ($this->tokens as $lang => $value) {
                 $index = $sum = 0;
                 $value = array_flip($value);
 
-                foreach ($samples as $v)
-                {
-                    if (isset($value[$v]))
-                    {
-                        $x = $index++ - $value[$v];
-                        $y = $x >> (PHP_INT_SIZE * 8);
+                foreach ($samples as $v) {
+                    if (isset($value[$v])) {
+                        $x   = $index++ - $value[$v];
+                        $y   = $x >> (PHP_INT_SIZE * 8);
                         $sum += ($x + $y) ^ $y;
                         continue;
                     }

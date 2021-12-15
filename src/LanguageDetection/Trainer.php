@@ -1,8 +1,10 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageDetection;
+
+use GlobIterator;
 
 /**
  * Class Trainer
@@ -19,36 +21,28 @@ class Trainer extends NgramParser
      *
      * @param string $dirname Name of the directory where the translations files are located
      * @return void
+     * @throws \JsonException
      */
-    public function learn(string $dirname = '')
+    public function learn(string $dirname = ''): void
     {
-        if (empty($dirname))
-        {
+        if (empty($dirname)) {
             $dirname = __DIR__ . '/../../resources/*/*.txt';
-        }
-        else if (!is_dir($dirname) || !is_readable($dirname))
-        {
+        } else if (!is_dir($dirname) || !is_readable($dirname)) {
             throw new \InvalidArgumentException('Provided directory could not be found or is not readable');
-        }
-        else
-        {
+        } else {
             $dirname = rtrim($dirname, '/');
             $dirname .= '/*/*.txt';
         }
 
-        /** @var \GlobIterator $txt */
-        foreach (new \GlobIterator($dirname) as $txt)
-        {
+        /** @var GlobIterator $txt */
+        foreach (new GlobIterator($dirname) as $txt) {
             $content = mb_strtolower(file_get_contents($txt->getPathname()));
 
             echo $txt->getBasename('.txt'), PHP_EOL;
 
             file_put_contents(
                 substr_replace($txt->getPathname(), 'json', -3),
-                json_encode(
-                    [ $txt->getBasename('.txt') => $this->getNgrams($content) ],
-                    JSON_UNESCAPED_UNICODE
-                )
+                json_encode([$txt->getBasename('.txt') => $this->getNgrams($content)], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)
             );
         }
     }
